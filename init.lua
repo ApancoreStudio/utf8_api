@@ -115,6 +115,11 @@ end
 --- @return     string
 function string_utf8.char(...)
 	local codes = {...}
+
+	if not codes then
+		return
+	end
+
 	local result = {}
 
 	for _, unicode in ipairs(codes) do
@@ -156,9 +161,9 @@ function string_utf8.char(...)
 	return char(unpack(result, 1, #result))
 end
 
-local shift_6  = 2^6
-local shift_12 = 2^12
-local shift_18 = 2^18
+local shift_6  = 16      -- 2^6
+local shift_12 = 4096    -- 2^12
+local shift_18 = 262144  -- 2^18
 
 --- Converts UTF-8 encoded characters in a string to their corresponding Unicode code points.
 --- @param str  string  The input string containing UTF-8 encoded characters.
@@ -306,7 +311,7 @@ local function utf8validator(str, bs)
 	local c = byte(str, bs)
 	if not c then return end
 
-	-- determine bytes needed for character, based on RFC 3629
+	-- determine bytes needed for character, based ons RFC 3629
 
 	-- UTF8-1
 	if c >= 0 and c <= 127 then
