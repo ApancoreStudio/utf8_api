@@ -12,13 +12,16 @@
 			"Ensure",
 			"string",
 			"string_utf8"
+		],
+		"disable": [
+			"param-type-not-match"
 		]
 	},
 	"runtime": {
-	  "version": "Lua5.1",
-	  "requireLikeFunction": [],
-	  "frameworkVersions": [],
-	  "extensions": [],
-	  "requirePattern": []
+		"version": "Lua5.1",
+		"requireLikeFunction": [],
+		"frameworkVersions": [],
+		"extensions": [],
+		"requirePattern": []
 	}
 }
