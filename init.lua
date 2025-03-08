@@ -9,9 +9,9 @@ local sub     = string.sub
 
 -- Ensure API
 if Ensure ~= nil then
-	arg_type = Ensure.argType
+	ensureArgType = Ensure.argType
 else
-	arg_type = function(arg, expectedType, n, function_name) end
+	ensureArgType = function(arg, expectedType, n, function_name) end
 end
 
 local utf8charpattern = '[%z\1-\127\194-\244][\128-\191]*'
@@ -20,7 +20,7 @@ local utf8charpattern = '[%z\1-\127\194-\244][\128-\191]*'
 --- @param byte  number  First byte of a character.
 --- @return      number
 local function utf8symbollen(byte)
-	arg_type(byte, "number", 1, "utf8symbollen")
+	ensureArgType(byte, "number", 1, "utf8symbollen")
 
 	return not byte and 0 or (byte < 0x80 and 1) or (byte >= 0xF0 and 4) or (byte >= 0xE0 and 3) or (byte >= 0xC0 and 2) or 1
 end
@@ -37,8 +37,8 @@ head_table[256] = 0
 --- @param bs   number  Position of character in line.
 --- @return     number
 local function utf8charbytes(str, bs)
-	arg_type(str, "string", 1, "utf8charbytes")
-	arg_type(bs, "number", 2, "utf8charbytes")
+	ensureArgType(str, "string", 1, "utf8charbytes")
+	ensureArgType(bs, "number", 2, "utf8charbytes")
 
 	assert(#str ~= 0, 'bad argument #1 to \'utf8charbytes\' (string cannot be empty)')
 
@@ -50,8 +50,8 @@ end
 --- @param bs   number  Position of character in line.
 --- @return     number
 local function utf8next(str, bs)
-	arg_type(str, "string", 1, "utf8next")
-	arg_type(bs, "number", 2, "utf8next")
+	ensureArgType(str, "string", 1, "utf8next")
+	ensureArgType(bs, "number", 2, "utf8next")
 
 	assert(#str ~= 0, 'bad argument #1 to \'utf8next\' (string cannot be empty)')
 
@@ -62,7 +62,7 @@ end
 --- @param str  string  Input string.
 --- @return     number
 function string_utf8.len(str)
-	arg_type(str, "string", 1, "string_utf8.len")
+	ensureArgType(str, "string", 1, "string_utf8.len")
 
 	assert(#str ~= 0, 'bad argument #1 to \'string_utf8.len\' (string cannot be empty)')
 
@@ -88,9 +88,9 @@ end
 function string_utf8.sub(str, i, j)
 	j = j or -1
 
-	arg_type(str, "string", 1, "string_utf8.sub")
-	arg_type(i, "number", 2, "string_utf8.sub")
-	arg_type(j, "number", 3, "string_utf8.sub")
+	ensureArgType(str, "string", 1, "string_utf8.sub")
+	ensureArgType(i, "number", 2, "string_utf8.sub")
+	ensureArgType(j, "number", 3, "string_utf8.sub")
 
 	assert(#str ~= 0, 'bad argument #1 to \'string_utf8.sub\' (string cannot be empty)')
 
@@ -102,9 +102,7 @@ function string_utf8.sub(str, i, j)
 	i = (i >= 0) and i or l + i + 1
 	j = (j >= 0) and j or l + j + 1
 
-	if i > j then
-		return ""
-	end
+	assert(i < j, 'bad arguments #2 & #3 to \'string_utf8.sub\' (#2 cannot be more #3)')
 
 	local start, finish = 1, bytes
 
@@ -189,9 +187,9 @@ local shift_18 = 262144  -- 2^18
 --- @param jbs  number  The ending byte position in the string (inclusive).
 --- @return     number | number...
 function string_utf8.unicode(str, ibs, jbs)
-	arg_type(str, "string", 1, "string_utf8.unicode")
-	arg_type(ibs, "number", 2, "string_utf8.unicode")
-	arg_type(jbs, "number", 3, "string_utf8.unicode")
+	ensureArgType(str, "string", 1, "string_utf8.unicode")
+	ensureArgType(ibs, "number", 2, "string_utf8.unicode")
+	ensureArgType(jbs, "number", 3, "string_utf8.unicode")
 
 	assert(ibs < jbs, 'bad arguments #2 & #3 to \'string_utf8.unicode\' (#2 cannot be more #3)')
 	assert(#str ~= 0, 'bad argument #1 to \'string_utf8.unicode\' (string cannot be empty)')
@@ -247,9 +245,9 @@ end
 --- @overload   fun(str: string, i: number)
 --- @return     number | number...
 function string_utf8.byte(str, i, j)
-	arg_type(str, "string", 1, "string_utf8.byte")
-	arg_type(i, "number", 2, "string_utf8.byte")
-	arg_type(j, "number", 3, "string_utf8.byte")
+	ensureArgType(str, "string", 1, "string_utf8.byte")
+	ensureArgType(i, "number", 2, "string_utf8.byte")
+	ensureArgType(j, "number", 3, "string_utf8.byte")
 
 	assert(#str ~= 0, 'bad argument #1 to \'string_utf8.byte\' (string cannot be empty)')
 
@@ -295,8 +293,8 @@ end
 function string_utf8.gensub(str, sub_len)
 	sub_len = sub_len or 1
 
-	arg_type(str, "string", 1, "string_utf8.gensub")
-	arg_type(sub_len, "number", 2, "string_utf8.gensub")
+	ensureArgType(str, "string", 1, "string_utf8.gensub")
+	ensureArgType(sub_len, "number", 2, "string_utf8.gensub")
 
 	assert(#str ~= 0, 'bad argument #1 to \'string_utf8.gensub\' (string cannot be empty)')
 
@@ -319,7 +317,7 @@ end
 --- @param str  string  The input UTF-8 encoded string.
 --- @return     string
 function string_utf8.reverse(str)
-	arg_type(str, "string", 1, "string_utf8.reverse")
+	ensureArgType(str, "string", 1, "string_utf8.reverse")
 
 	local result = ''
 
@@ -338,8 +336,8 @@ end
 local function utf8validator(str, bs)
 	bs = bs or 1
 
-	arg_type(str, "string", 1, "utf8validator")
-	arg_type(bs, "number", 2, "utf8validator")
+	ensureArgType(str, "string", 1, "utf8validator")
+	ensureArgType(bs, "number", 2, "utf8validator")
 
 	assert(#str ~= 0, 'bad argument #1 to \'utf8validator\' (string cannot be empty)')
 
@@ -425,8 +423,8 @@ end
 function string_utf8.validate(str, byte_pos)
 	byte_pos = byte_pos or 1
 
-	arg_type(str, "string", 1, "string_utf8.validate")
-	arg_type(byte_pos, "number", 2, "string_utf8.validate")
+	ensureArgType(str, "string", 1, "string_utf8.validate")
+	ensureArgType(byte_pos, "number", 2, "string_utf8.validate")
 
 	assert(#str ~= 0, 'bad argument #1 to \'string_utf8.validate\' (string cannot be empty)')
 
@@ -445,7 +443,7 @@ end
 --- @return     fun(skip_ptr: table|nil)
 function string_utf8.codes(str)
 
-	arg_type(str, "string", 1, "string_utf8.codes")
+	ensureArgType(str, "string", 1, "string_utf8.codes")
 
 	assert(#str ~= 0, 'bad argument #1 to \'string_utf8.codes\' (string cannot be empty)')
 
@@ -492,9 +490,9 @@ function string_utf8.offset(str, n, bs)
 		end
 	end
 
-	arg_type(str, "string", 1, "string_utf8.offset")
-	arg_type(n, "number", 2, "string_utf8.offset")
-	arg_type(bs, "number", 3, "string_utf8.offset")
+	ensureArgType(str, "string", 1, "string_utf8.offset")
+	ensureArgType(n, "number", 2, "string_utf8.offset")
+	ensureArgType(bs, "number", 3, "string_utf8.offset")
 
 	assert(#str ~= 0, 'bad argument #1 to \'string_utf8.offset\' (string cannot be empty)')
 
@@ -561,8 +559,8 @@ end
 --- @param mapping  table   A table where keys are UTF-8 characters (or patterns) and values are their replacements.
 --- @return         string
 function string_utf8.replace(str, mapping)
-	arg_type(str, "string", 1, "string_utf8.replace")
-	arg_type(mapping, "table", 2, "string_utf8.replace")
+	ensureArgType(str, "string", 1, "string_utf8.replace")
+	ensureArgType(mapping, "table", 2, "string_utf8.replace")
 
 	assert(#str ~= 0, 'bad argument #1 to \'string_utf8.offset\' (string cannot be empty)')
 
@@ -574,7 +572,7 @@ end
 --- @param str  string  The input UTF-8 encoded string.
 --- @return     string
 function string_utf8.upper(str)
-	arg_type(str, "string", 1, "string_utf8.upper")
+	ensureArgType(str, "string", 1, "string_utf8.upper")
 
 	assert(#str ~= 0, 'bad argument #1 to \'string_utf8.upper\' (string cannot be empty)')
 
@@ -585,7 +583,7 @@ end
 --- @param str  string  The input UTF-8 encoded string.
 --- @return     string
 function string_utf8.lower(str)
-	arg_type(str, "string", 1, "string_utf8.lower")
+	ensureArgType(str, "string", 1, "string_utf8.lower")
 
 	assert(#str ~= 0, 'bad argument #1 to \'string_utf8.lower\' (string cannot be empty)')
 
