@@ -7,13 +7,20 @@ local char    = string.char
 local len     = string.len
 local sub     = string.sub
 
+-- Ensure API
+if Ensure ~= nil then
+	arg_type = Ensure.argType
+else
+	arg_type = function(arg, expectedType, n, function_name) end
+end
+
 local utf8charpattern = '[%z\1-\127\194-\244][\128-\191]*'
 
 --- Determines the length of a character in bytes encoded in UTF-8, based on the first byte of the character.
---- @param byte  integer  First byte of a character.
+--- @param byte  number  First byte of a character.
 --- @return      number
 local function utf8symbollen(byte)
-	-- assert
+	arg_type(byte, "number", 1, "utf8symbollen")
 
 	return not byte and 0 or (byte < 0x80 and 1) or (byte >= 0xF0 and 4) or (byte >= 0xE0 and 3) or (byte >= 0xC0 and 2) or 1
 end
@@ -27,20 +34,26 @@ head_table[256] = 0
 
 --- Returns the length of the character in bytes starting at position `pos` in the string `str` using the table `head_table`.
 --- @param str  string  Input string.
---- @param bs  number   Position of character in line.
+--- @param bs   number  Position of character in line.
 --- @return     number
 local function utf8charbytes(str, bs)
-	-- assert
+	arg_type(str, "string", 1, "utf8charbytes")
+	arg_type(bs, "number", 2, "utf8charbytes")
+
+	assert(#str ~= 0, 'bad argument #1 to \'utf8charbytes\' (string cannot be empty)')
 
 	return head_table[byte(str, bs) or 256]
 end
 
 --- Returns the new position in the string `str`, skipping the current character.
 --- @param str  string  Input string.
---- @param bs  number   Position of character in line.
+--- @param bs   number  Position of character in line.
 --- @return     number
 local function utf8next(str, bs)
-	-- assert
+	arg_type(str, "string", 1, "utf8next")
+	arg_type(bs, "number", 2, "utf8next")
+
+	assert(#str ~= 0, 'bad argument #1 to \'utf8next\' (string cannot be empty)')
 
 	return bs + utf8charbytes(str, bs)
 end
@@ -49,7 +62,9 @@ end
 --- @param str  string  Input string.
 --- @return     number
 function string_utf8.len(str)
-	-- assert
+	arg_type(str, "string", 1, "string_utf8.len")
+
+	assert(#str ~= 0, 'bad argument #1 to \'string_utf8.len\' (string cannot be empty)')
 
 	local bs = 1
 	local bytes = len(str)
@@ -65,21 +80,25 @@ end
 
 
 --- Functions identically to `string.sub` except that `i` and `j` are UTF-8 characters instead of bytes.
---- @param s   string  Input string.
---- @param i   number  The starting character index (default: 1). Negative values count from the end.
---- @param j?  number  The ending character index (default: i). Negative values count from the end.
+--- @param str  string  Input string.
+--- @param i    number  The starting character index (default: 1). Negative values count from the end.
+--- @param j    number  The ending character index (default: i). Negative values count from the end.
+--- @overload   fun(s: string, i: number)
 --- @return     string
-function string_utf8.sub(s, i, j)
-	-- assert
-
-	-- argument defaults
+function string_utf8.sub(str, i, j)
 	j = j or -1
 
+	arg_type(str, "string", 1, "string_utf8.sub")
+	arg_type(i, "number", 2, "string_utf8.sub")
+	arg_type(j, "number", 3, "string_utf8.sub")
+
+	assert(#str ~= 0, 'bad argument #1 to \'string_utf8.sub\' (string cannot be empty)')
+
 	local bs = 1
-	local bytes = len(s)
+	local bytes = len(str)
 	local length = 0
 
-	local l = (i >= 0 and j >= 0) or string_utf8.len(s)
+	local l = (i >= 0 and j >= 0) or string_utf8.len(str)
 	i = (i >= 0) and i or l + i + 1
 	j = (j >= 0) and j or l + j + 1
 
@@ -96,7 +115,7 @@ function string_utf8.sub(s, i, j)
 			start = bs
 		end
 
-		bs = utf8next(s, bs)
+		bs = utf8next(str, bs)
 
 		if length == j then
 			finish = bs - 1
@@ -107,19 +126,18 @@ function string_utf8.sub(s, i, j)
 	if i > length then start = bytes + 1 end
 	if j < 1 then finish = 0 end
 
-	return sub(s, start, finish)
+	return sub(str, start, finish)
 end
 
 --- Returns a UTF-8 string from the given Unicode codes.
---- @param ...  integer  List of Unicode codes.
+--- @param ...  number  List of Unicode codes.
 --- @return     string
 function string_utf8.char(...)
 	local codes = {...}
 
-	if not codes then
-		return
-	end
+	assert(codes ~= {}, 'bad argument #1 to \'string_utf8.char\' (key cannot be nil)')
 
+	--- @type int[]
 	local result = {}
 
 	for _, unicode in ipairs(codes) do
@@ -171,7 +189,12 @@ local shift_18 = 262144  -- 2^18
 --- @param jbs  number  The ending byte position in the string (inclusive).
 --- @return     number | number...
 function string_utf8.unicode(str, ibs, jbs)
-	if ibs > jbs then return end
+	arg_type(str, "string", 1, "string_utf8.unicode")
+	arg_type(ibs, "number", 2, "string_utf8.unicode")
+	arg_type(jbs, "number", 3, "string_utf8.unicode")
+
+	assert(ibs < jbs, 'bad arguments #2 & #3 to \'string_utf8.unicode\' (#2 cannot be more #3)')
+	assert(#str ~= 0, 'bad argument #1 to \'string_utf8.unicode\' (string cannot be empty)')
 
 	local bytes
 
@@ -218,11 +241,17 @@ end
 
 --- Returns Unicode code points for characters in a UTF-8 string within the specified range.
 --- @param str  string  The input UTF-8 encoded string.
---- @param i?   number  The starting character index (default: 1). Negative values count from the end.
---- @param j?   number  The ending character index (default: i). Negative values count from the end.
+--- @param i    number  The starting character index (default: 1). Negative values count from the end.
+--- @param j    number  The ending character index (default: i). Negative values count from the end.
+--- @overload   fun(str: string)
+--- @overload   fun(str: string, i: number)
 --- @return     number | number...
 function string_utf8.byte(str, i, j)
-	if #str == 0 then return end
+	arg_type(str, "string", 1, "string_utf8.byte")
+	arg_type(i, "number", 2, "string_utf8.byte")
+	arg_type(j, "number", 3, "string_utf8.byte")
+
+	assert(#str ~= 0, 'bad argument #1 to \'string_utf8.byte\' (string cannot be empty)')
 
 	local ibs, jbs
 
@@ -266,6 +295,11 @@ end
 function string_utf8.gensub(str, sub_len)
 	sub_len = sub_len or 1
 
+	arg_type(str, "string", 1, "string_utf8.gensub")
+	arg_type(sub_len, "number", 2, "string_utf8.gensub")
+
+	assert(#str ~= 0, 'bad argument #1 to \'string_utf8.gensub\' (string cannot be empty)')
+
 	local max_len = #str
 
 	return function(skip_ptr, bs)
@@ -282,12 +316,14 @@ function string_utf8.gensub(str, sub_len)
 end
 
 --- Reverses a UTF-8 encoded string while preserving multi-byte characters.
---- @param s  string  The input UTF-8 encoded string.
---- @return   string
-function string_utf8.reverse(s)
+--- @param str  string  The input UTF-8 encoded string.
+--- @return     string
+function string_utf8.reverse(str)
+	arg_type(str, "string", 1, "string_utf8.reverse")
+
 	local result = ''
 
-	for _, w in string_utf8.gensub(s) do
+	for _, w in string_utf8.gensub(str) do
 		result = w .. result
 	end
 
@@ -296,19 +332,19 @@ end
 
 --- Validates UTF-8 encoded characters in a string starting from a given byte position.
 --- @param str  string  The input UTF-8 encoded string to validate.
---- @param bs?  number  The starting byte position for validation (default: 1).
---- @return     number | nil
+--- @param bs   number  The starting byte position for validation (default: 1).
+--- @overload   fun(str: string)
+--- @return     number?
 local function utf8validator(str, bs)
 	bs = bs or 1
 
-	if type(str) ~= "string" then
-		error("bad argument #1 to 'utf8charbytes' (string expected, got ".. type(str).. ")")
-	end
-	if type(bs) ~= "number" then
-		error("bad argument #2 to 'utf8charbytes' (number expected, got ".. type(bs).. ")")
-	end
+	arg_type(str, "string", 1, "utf8validator")
+	arg_type(bs, "number", 2, "utf8validator")
+
+	assert(#str ~= 0, 'bad argument #1 to \'utf8validator\' (string cannot be empty)')
 
 	local c = byte(str, bs)
+
 	if not c then return end
 
 	-- determine bytes needed for character, based ons RFC 3629
@@ -387,7 +423,15 @@ end
 --- @param byte_pos?  number  The starting byte position for validation (default: 1).
 --- @return           boolean | table
 function string_utf8.validate(str, byte_pos)
+	byte_pos = byte_pos or 1
+
+	arg_type(str, "string", 1, "string_utf8.validate")
+	arg_type(byte_pos, "number", 2, "string_utf8.validate")
+
+	assert(#str ~= 0, 'bad argument #1 to \'string_utf8.validate\' (string cannot be empty)')
+
 	local result = {}
+
 	for nbs, bs, part, code in utf8validator, str, byte_pos do
 		if bs then
 			result[#result + 1] = { pos = bs, part = part, code = code }
@@ -400,6 +444,11 @@ end
 --- @param str  string  The input UTF-8 encoded string.
 --- @return     fun(skip_ptr: table|nil)
 function string_utf8.codes(str)
+
+	arg_type(str, "string", 1, "string_utf8.codes")
+
+	assert(#str ~= 0, 'bad argument #1 to \'string_utf8.codes\' (string cannot be empty)')
+
 	local max_len = #str
 	local bs = 1
 	return function(skip_ptr)
@@ -430,7 +479,8 @@ n < 0: n more scans backwards
 --- Finds the byte position of the `n`-th UTF-8 character in a string, starting from a given byte position.
 --- @param str  string  The input UTF-8 encoded string.
 --- @param n    number  The character index to find. If `n` is negative, counts from the end.
---- @param bs?  number  The starting byte position (default: 1 for positive `n`, end of string for negative `n`).
+--- @param bs   number  The starting byte position (default: 1 for positive `n`, end of string for negative `n`).
+--- @overload   fun(str: string, n: number)
 --- @return     number | nil
 function string_utf8.offset(str, n, bs)
 	local l = #str
@@ -441,8 +491,15 @@ function string_utf8.offset(str, n, bs)
 			bs = 1
 		end
 	end
+
+	arg_type(str, "string", 1, "string_utf8.offset")
+	arg_type(n, "number", 2, "string_utf8.offset")
+	arg_type(bs, "number", 3, "string_utf8.offset")
+
+	assert(#str ~= 0, 'bad argument #1 to \'string_utf8.offset\' (string cannot be empty)')
+
 	if bs <= 0 or bs > l + 1 then
-		error("bad argument #3 to 'offset' (position out of range)")
+		error("bad argument #3 to 'string_utf8.offset' (position out of range)")
 	end
 
 	if n == 0 then
@@ -500,30 +557,37 @@ function string_utf8.offset(str, n, bs)
 end
 
 --- Replaces UTF-8 characters in a string according to a mapping table.
---- @param s        string  The input UTF-8 encoded string.
+--- @param str      string  The input UTF-8 encoded string.
 --- @param mapping  table   A table where keys are UTF-8 characters (or patterns) and values are their replacements.
 --- @return         string
-function string_utf8.replace(s, mapping)
-	if type(s) ~= "string" then
-		error("bad argument #1 to 'utf8replace' (string expected, got ".. type(s).. ")")
-	end
-	if type(mapping) ~= "table" then
-		error("bad argument #2 to 'utf8replace' (table expected, got ".. type(mapping).. ")")
-	end
-	local result = string.gsub( s, utf8charpattern, mapping )
+function string_utf8.replace(str, mapping)
+	arg_type(str, "string", 1, "string_utf8.replace")
+	arg_type(mapping, "table", 2, "string_utf8.replace")
+
+	assert(#str ~= 0, 'bad argument #1 to \'string_utf8.offset\' (string cannot be empty)')
+
+	local result = string.gsub( str, utf8charpattern, mapping )
 	return result
 end
 
 --- Converts all UTF-8 characters in a string to uppercase.
---- @param s  string  The input UTF-8 encoded string.
---- @return   string
-function string_utf8.upper (s)
-	return string_utf8.replace(s, string_utf8.lc_uc)
+--- @param str  string  The input UTF-8 encoded string.
+--- @return     string
+function string_utf8.upper(str)
+	arg_type(str, "string", 1, "string_utf8.upper")
+
+	assert(#str ~= 0, 'bad argument #1 to \'string_utf8.upper\' (string cannot be empty)')
+
+	return string_utf8.replace(str, string_utf8.lc_uc)
 end
 
 --- Converts all UTF-8 characters in a string to lowercase.
---- @param s  string  The input UTF-8 encoded string.
---- @return   string
-function string_utf8.lower (s)
-	return string_utf8.replace(s, string_utf8.uc_lc)
+--- @param str  string  The input UTF-8 encoded string.
+--- @return     string
+function string_utf8.lower(str)
+	arg_type(str, "string", 1, "string_utf8.lower")
+
+	assert(#str ~= 0, 'bad argument #1 to \'string_utf8.lower\' (string cannot be empty)')
+
+	return string_utf8.replace(str, string_utf8.uc_lc)
 end

@@ -1,0 +1,24 @@
+{
+	"completion": {
+		"enable": true,
+		"autoRequire": false,
+		"callSnippet": false,
+		"postfix": "@"
+	},
+	"diagnostics": {
+		"globals": [
+			"core",
+			"table",
+			"Ensure",
+			"string",
+			"string_utf8"
+		]
+	},
+	"runtime": {
+	  "version": "Lua5.1",
+	  "requireLikeFunction": [],
+	  "frameworkVersions": [],
+	  "extensions": [],
+	  "requirePattern": []
+	}
+}
