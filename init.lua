@@ -7,6 +7,8 @@ local char    = string.char
 local len     = string.len
 local sub     = string.sub
 
+local ensureArgType
+
 -- Ensure API
 if Ensure ~= nil then
 	ensureArgType = Ensure.argType
