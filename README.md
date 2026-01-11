@@ -6,3 +6,5 @@ Original repo: https://github.com/Stepets/utf8.lua/tree/master
 
 Commit: 17f4e009a22fb2f2e6ad316a05b2cca8e071fc3b
 Date of copying: 6.03.2025
+
+**Archived and moved.** The current repository is located at: https://git.apancore.ru/Apancore.Studio/utf8_api
